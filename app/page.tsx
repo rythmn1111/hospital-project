@@ -87,11 +87,11 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid w-full max-w-md grid-cols-1 gap-4 px-4 sm:grid-cols-2">
+          <div className="grid w-full max-w-md grid-cols-2 gap-4 px-4">
             {/* Admin Card */}
             <button
               onClick={() => setSelectedRole("admin")}
-              className="group flex flex-col items-center gap-3 rounded-2xl border-2 border-zinc-200 bg-white p-6 shadow-sm transition-all hover:border-blue-500 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-500"
+              className="group flex flex-col items-center gap-3 rounded-2xl border-2 border-zinc-200 bg-white p-6 shadow-sm transition-all active:border-blue-500 active:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:active:border-blue-500"
             >
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white dark:bg-blue-900/40 dark:text-blue-400 dark:group-hover:bg-blue-600 dark:group-hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -109,7 +109,7 @@ export default function Home() {
             {/* Staff Card */}
             <button
               onClick={() => setSelectedRole("staff")}
-              className="group flex flex-col items-center gap-3 rounded-2xl border-2 border-zinc-200 bg-white p-6 shadow-sm transition-all hover:border-emerald-500 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-500"
+              className="group flex flex-col items-center gap-3 rounded-2xl border-2 border-zinc-200 bg-white p-6 shadow-sm transition-all active:border-emerald-500 active:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:active:border-emerald-500"
             >
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 transition-colors group-hover:bg-emerald-600 group-hover:text-white dark:bg-emerald-900/40 dark:text-emerald-400 dark:group-hover:bg-emerald-600 dark:group-hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -151,7 +151,7 @@ export default function Home() {
           </p>
           <button
             onClick={handleAdminLogin}
-            className="rounded-xl bg-blue-600 px-8 py-3 text-lg font-semibold text-white transition-colors hover:bg-blue-700"
+            className="rounded-2xl bg-blue-600 px-10 py-4 text-lg font-semibold text-white active:bg-blue-700"
           >
             Login as Admin
           </button>
@@ -192,7 +192,7 @@ export default function Home() {
               value={staffUsername}
               onChange={(e) => setStaffUsername(e.target.value)}
               placeholder="Enter username"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base text-zinc-900 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             />
           </div>
           <div>
@@ -204,7 +204,7 @@ export default function Home() {
               value={staffPassword}
               onChange={(e) => setStaffPassword(e.target.value)}
               placeholder="Enter password"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base text-zinc-900 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             />
           </div>
           {staffError && (
@@ -213,7 +213,7 @@ export default function Home() {
           <button
             type="submit"
             disabled={staffLoading}
-            className="w-full rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+            className="w-full rounded-xl bg-emerald-600 py-3.5 text-base font-semibold text-white active:bg-emerald-700 disabled:opacity-50"
           >
             {staffLoading ? "Logging in..." : "Login"}
           </button>

@@ -119,6 +119,24 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [loginRole, setLoginRole] = useState<string | null>(null);
   const [staffName, setStaffName] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    function onFsChange() {
+      setIsFullscreen(!!document.fullscreenElement);
+    }
+    document.addEventListener("fullscreenchange", onFsChange);
+    setIsFullscreen(!!document.fullscreenElement);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
 
   useEffect(() => {
     const role = localStorage.getItem("login_role");
@@ -197,8 +215,23 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-3">
             <button
+              onClick={toggleFullscreen}
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-300 text-zinc-600 active:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:active:bg-zinc-800"
+              title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            >
+              {isFullscreen ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                </svg>
+              )}
+            </button>
+            <button
               onClick={handleLogout}
-              className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-700"
+              className="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white active:bg-red-700"
             >
               Logout
             </button>
@@ -249,21 +282,21 @@ export default function Dashboard() {
             <p className="mt-1 text-sm text-zinc-400 dark:text-zinc-500">Contact your admin to get access.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {visibleSections.map((section) => (
               <button
                 key={section.title}
                 onClick={() => router.push(section.href)}
-                className={`group flex flex-col items-start gap-4 rounded-2xl border-t-4 ${section.color} bg-white p-6 text-left shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${section.hoverBg} dark:bg-zinc-900`}
+                className={`group flex flex-col items-start gap-3 rounded-2xl border-t-4 ${section.color} bg-white p-5 text-left shadow-sm transition-all active:scale-[0.98] active:shadow-md ${section.hoverBg} dark:bg-zinc-900`}
               >
                 <div className={`rounded-xl ${section.iconBg} p-3 ${section.iconColor}`}>
                   {section.icon}
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                  <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
                     {section.title}
                   </h3>
-                  <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2">
                     {section.description}
                   </p>
                 </div>

@@ -55,9 +55,9 @@ export default function PatientForm({ initial, nfcCardId, onSubmit, onCancel, lo
   }
 
   const inputClass =
-    "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100";
-  const labelClass = "mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300";
-  const errorClass = "mt-1 text-xs text-red-500";
+    "w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base text-zinc-900 placeholder:text-zinc-400 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100";
+  const labelClass = "mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300";
+  const errorClass = "mt-1 text-sm text-red-500";
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-2xl rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
@@ -106,10 +106,10 @@ export default function PatientForm({ initial, nfcCardId, onSubmit, onCancel, lo
         </div>
       </div>
       <div className="mt-6 flex justify-end gap-3">
-        <button type="button" onClick={onCancel} className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+        <button type="button" onClick={onCancel} className="rounded-xl border border-zinc-300 px-6 py-3 text-base font-medium text-zinc-700 active:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:active:bg-zinc-800">
           Cancel
         </button>
-        <button type="submit" disabled={loading} className="rounded-lg bg-cyan-600 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-cyan-700 disabled:opacity-50">
+        <button type="submit" disabled={loading} className="rounded-xl bg-cyan-600 px-8 py-3 text-base font-medium text-white active:bg-cyan-700 disabled:opacity-50">
           {loading ? "Saving..." : initial ? "Update Patient" : "Register Patient"}
         </button>
       </div>
