@@ -45,7 +45,7 @@ export default function QRCodeDisplay() {
             setStatus("connected");
             localStorage.setItem("wa_token", token);
             socket.disconnect();
-            window.location.href = "/chat";
+            window.location.href = "/";
           }
         }
       );
@@ -62,7 +62,7 @@ export default function QRCodeDisplay() {
       if (sessionData.status === "CONNECTED") {
         localStorage.setItem("wa_token", token);
         socket.disconnect();
-        window.location.href = "/chat";
+        window.location.href = "/";
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Connection failed");

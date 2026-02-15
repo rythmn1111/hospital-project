@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hospital WhatsApp",
-  description: "WhatsApp Web integration for hospital messaging",
+  title: "Hospital Management",
+  description: "Hospital patient management system with WhatsApp integration",
 };
 
 export default function RootLayout({
