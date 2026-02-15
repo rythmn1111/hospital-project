@@ -218,7 +218,7 @@ export default function Dashboard() {
               <h1 className="text-xl font-bold leading-tight text-zinc-900 dark:text-zinc-100">
                 HospitalOS
               </h1>
-              <span className="text-[10px] font-medium tracking-widest uppercase text-zinc-400 dark:text-zinc-500">
+              <span className="text-xs font-medium tracking-widest uppercase text-zinc-400 dark:text-zinc-500">
                 by Zenn Research
               </span>
             </div>
@@ -282,7 +282,7 @@ export default function Dashboard() {
                 <span className="text-sm font-semibold leading-tight text-zinc-900 dark:text-zinc-100">
                   {isAdmin ? "Admin" : staffName ?? "Staff"}
                 </span>
-                <span className="text-[11px] leading-tight text-zinc-500 dark:text-zinc-400">
+                <span className="text-xs leading-tight text-zinc-500 dark:text-zinc-400">
                   {isAdmin ? "Admin" : "Staff"} · Logged in
                 </span>
               </div>
