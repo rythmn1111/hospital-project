@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import NfcTapButton from "@/components/NfcTapButton";
+import { medicines as medicineList } from "@/lib/data/medicines";
+import { diseases } from "@/lib/data/diseases";
 import type {
   Patient,
   Consultation,
@@ -11,6 +13,74 @@ import type {
   TestResult,
   Prescription,
 } from "@/lib/store/patient-types";
+
+function AutocompleteInput({
+  value,
+  onChange,
+  suggestions,
+  placeholder,
+  className,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  suggestions: string[];
+  placeholder?: string;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [filtered, setFiltered] = useState<string[]>([]);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  function handleChange(v: string) {
+    onChange(v);
+    if (v.trim().length >= 1) {
+      const q = v.toLowerCase();
+      setFiltered(suggestions.filter((s) => s.toLowerCase().includes(q)).slice(0, 8));
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  }
+
+  function pick(s: string) {
+    onChange(s);
+    setOpen(false);
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <input
+        value={value}
+        onChange={(e) => handleChange(e.target.value)}
+        onFocus={() => { if (value.trim().length >= 1) { handleChange(value); } }}
+        placeholder={placeholder}
+        className={className}
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+          {filtered.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => pick(s)}
+              className="block w-full px-3 py-2.5 text-left text-sm text-zinc-800 active:bg-green-50 dark:text-zinc-200 dark:active:bg-green-900/30"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 type View =
   | { kind: "tap" }
@@ -29,7 +99,7 @@ export default function ClinicDashboard() {
 
   // Items for dropdowns
   const [labTests, setLabTests] = useState<{ id: string; name: string }[]>([]);
-  const [medicines, setMedicines] = useState<{ id: string; name: string }[]>([]);
+  const [itemMedicines, setItemMedicines] = useState<{ id: string; name: string }[]>([]);
 
   // Consultation form
   const [symptoms, setSymptoms] = useState("");
@@ -74,7 +144,7 @@ export default function ClinicDashboard() {
     setTestOrders(testRes.data ?? []);
     setPrescriptions(rxRes.data ?? []);
     setLabTests(labTestsRes.data ?? []);
-    setMedicines(medsRes.data ?? []);
+    setItemMedicines(medsRes.data ?? []);
     setLoading(false);
   }, []);
 
@@ -318,9 +388,13 @@ export default function ClinicDashboard() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Diagnosis</label>
-              <input value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)}
+              <AutocompleteInput
+                value={diagnosis}
+                onChange={setDiagnosis}
+                suggestions={diseases.map((d) => `${d.name} (${d.code})`)}
+                placeholder="Start typing diagnosis..."
                 className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-green-500 focus:ring-1 focus:ring-green-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                placeholder="Doctor's diagnosis..." />
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Notes</label>
@@ -380,17 +454,23 @@ export default function ClinicDashboard() {
             <div className="mb-4 space-y-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
               <div>
                 <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Medicine</label>
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {medicines.map((m) => (
-                    <button key={m.id} onClick={() => setRxMedicine(m.name)}
-                      className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${rxMedicine === m.name ? "border-green-500 bg-green-100 text-green-700" : "border-zinc-300 text-zinc-600 hover:border-green-400 dark:border-zinc-600 dark:text-zinc-400"}`}>
-                      {m.name}
-                    </button>
-                  ))}
-                </div>
-                <input value={rxMedicine} onChange={(e) => setRxMedicine(e.target.value)}
+                {itemMedicines.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {itemMedicines.map((m) => (
+                      <button key={m.id} onClick={() => setRxMedicine(m.name)}
+                        className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${rxMedicine === m.name ? "border-green-500 bg-green-100 text-green-700" : "border-zinc-300 text-zinc-600 hover:border-green-400 dark:border-zinc-600 dark:text-zinc-400"}`}>
+                        {m.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <AutocompleteInput
+                  value={rxMedicine}
+                  onChange={setRxMedicine}
+                  suggestions={medicineList}
+                  placeholder="Type medicine name..."
                   className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-                  placeholder="Or type medicine name..." />
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

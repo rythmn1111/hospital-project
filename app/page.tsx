@@ -17,6 +17,13 @@ export default function Home() {
   const [staffError, setStaffError] = useState("");
   const [staffLoading, setStaffLoading] = useState(false);
 
+  // Admin OTP login state
+  const [adminPhone, setAdminPhone] = useState("");
+  const [adminOtp, setAdminOtp] = useState("");
+  const [adminStep, setAdminStep] = useState<"phone" | "otp">("phone");
+  const [adminError, setAdminError] = useState("");
+  const [adminLoading, setAdminLoading] = useState(false);
+
   useEffect(() => {
     setLoggedIn(!!localStorage.getItem("logged_in"));
     setIsDark(document.documentElement.classList.contains("dark"));
@@ -48,10 +55,59 @@ export default function Home() {
     return <Dashboard />;
   }
 
-  function handleAdminLogin() {
-    localStorage.setItem("logged_in", "true");
-    localStorage.setItem("login_role", "admin");
-    window.location.href = "/";
+  async function handleRequestOtp(e: React.FormEvent) {
+    e.preventDefault();
+    if (!adminPhone.trim()) {
+      setAdminError("Please enter your phone number");
+      return;
+    }
+    setAdminLoading(true);
+    setAdminError("");
+    try {
+      const res = await fetch("/api/auth/request-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: adminPhone.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAdminError(data.error || "Failed to send OTP");
+      } else {
+        setAdminStep("otp");
+      }
+    } catch {
+      setAdminError("Network error. Please try again.");
+    }
+    setAdminLoading(false);
+  }
+
+  async function handleVerifyOtp(e: React.FormEvent) {
+    e.preventDefault();
+    if (!adminOtp.trim()) {
+      setAdminError("Please enter the OTP");
+      return;
+    }
+    setAdminLoading(true);
+    setAdminError("");
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: adminPhone.trim(), code: adminOtp.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAdminError(data.error || "Verification failed");
+      } else {
+        localStorage.setItem("logged_in", "true");
+        localStorage.setItem("login_role", "admin");
+        localStorage.setItem("admin_name", data.name);
+        window.location.href = "/";
+      }
+    } catch {
+      setAdminError("Network error. Please try again.");
+    }
+    setAdminLoading(false);
   }
 
   async function handleStaffLogin(e: React.FormEvent) {
@@ -163,33 +219,102 @@ export default function Home() {
     );
   }
 
-  // Admin login — direct bypass
+  // Admin login — WhatsApp OTP flow
   if (selectedRole === "admin") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950">
         {themeToggleBtn}
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex w-full max-w-sm flex-col items-center gap-6 px-4">
           <button
-            onClick={() => setSelectedRole(null)}
-            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            onClick={() => {
+              setSelectedRole(null);
+              setAdminStep("phone");
+              setAdminPhone("");
+              setAdminOtp("");
+              setAdminError("");
+            }}
+            className="flex items-center gap-1 self-start text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
             Back
           </button>
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-            Admin Login
-          </h1>
-          <p className="text-zinc-600 dark:text-zinc-400">
-            Access all hospital sections as administrator
-          </p>
-          <button
-            onClick={handleAdminLogin}
-            className="rounded-2xl bg-blue-600 px-10 py-4 text-lg font-semibold text-white active:bg-blue-700"
-          >
-            Login as Admin
-          </button>
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+              Admin Login
+            </h1>
+            <p className="mt-2 text-zinc-600 dark:text-zinc-400">
+              {adminStep === "phone"
+                ? "Enter your registered phone number"
+                : "Enter the OTP sent to your WhatsApp"}
+            </p>
+          </div>
+
+          {adminStep === "phone" ? (
+            <form onSubmit={handleRequestOtp} className="w-full space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={adminPhone}
+                  onChange={(e) => setAdminPhone(e.target.value)}
+                  placeholder="e.g. 919876543210"
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                />
+              </div>
+              {adminError && (
+                <p className="text-sm text-red-500">{adminError}</p>
+              )}
+              <button
+                type="submit"
+                disabled={adminLoading}
+                className="w-full rounded-xl bg-blue-600 py-3.5 text-base font-semibold text-white active:bg-blue-700 disabled:opacity-50"
+              >
+                {adminLoading ? "Sending OTP..." : "Send OTP"}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="w-full space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  OTP Code
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={adminOtp}
+                  onChange={(e) => setAdminOtp(e.target.value.replace(/\D/g, ""))}
+                  placeholder="Enter 6-digit OTP"
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-center text-2xl font-mono tracking-widest text-zinc-900 placeholder:text-sm placeholder:tracking-normal placeholder:font-sans placeholder:text-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                />
+              </div>
+              {adminError && (
+                <p className="text-sm text-red-500">{adminError}</p>
+              )}
+              <button
+                type="submit"
+                disabled={adminLoading}
+                className="w-full rounded-xl bg-blue-600 py-3.5 text-base font-semibold text-white active:bg-blue-700 disabled:opacity-50"
+              >
+                {adminLoading ? "Verifying..." : "Verify OTP"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminStep("phone");
+                  setAdminOtp("");
+                  setAdminError("");
+                }}
+                className="w-full text-center text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              >
+                Change phone number
+              </button>
+            </form>
+          )}
         </div>
       </div>
     );

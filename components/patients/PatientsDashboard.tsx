@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { nfcWrite, generateNfcId } from "@/lib/nfc";
+import { bleIsConnected, bleNfcWrite } from "@/lib/nfc-ble";
 import NfcTapButton from "@/components/NfcTapButton";
 import type { Patient } from "@/lib/store/patient-types";
 import PatientListView from "./PatientListView";
@@ -112,7 +113,12 @@ export default function PatientsDashboard() {
     const newId = generateNfcId();
     setNfcStep("writing");
     try {
-      await nfcWrite(newId, 30);
+      const useBle = localStorage.getItem("hospitalos-nfc-mode") === "bluetooth" && bleIsConnected();
+      if (useBle) {
+        await bleNfcWrite(newId, 35000);
+      } else {
+        await nfcWrite(newId, 30);
+      }
       setNfcCardId(newId);
       setNfcStep("form");
     } catch {

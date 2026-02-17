@@ -16,10 +16,12 @@
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
+    "@anthropic-ai/claude-code": "^2.1.44",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-bluetooth": "^0.0.21",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",

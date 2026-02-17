@@ -121,6 +121,7 @@ export default function Dashboard() {
   const [staffName, setStaffName] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDark, setIsDark] = useState(true);
+  const [clinicMode, setClinicMode] = useState(false);
 
   useEffect(() => {
     function onFsChange() {
@@ -129,8 +130,17 @@ export default function Dashboard() {
     document.addEventListener("fullscreenchange", onFsChange);
     setIsFullscreen(!!document.fullscreenElement);
     setIsDark(document.documentElement.classList.contains("dark"));
+    setClinicMode(localStorage.getItem("clinic_mode") === "true");
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
+
+  const hiddenInClinicMode = ["hospital", "testing-labs"];
+
+  function toggleClinicMode() {
+    const next = !clinicMode;
+    setClinicMode(next);
+    localStorage.setItem("clinic_mode", String(next));
+  }
 
   function toggleTheme() {
     const html = document.documentElement;
@@ -293,13 +303,26 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
-            Welcome back{staffName ? `, ${staffName}` : ""}
-          </h2>
-          <p className="mt-1 text-zinc-500 dark:text-zinc-400">
-            {isAdmin ? "Select a section to get started" : "Your accessible sections"}
-          </p>
+        <div className="mb-6 flex items-end justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+              Welcome back{staffName ? `, ${staffName}` : ""}
+            </h2>
+            <p className="mt-1 text-zinc-500 dark:text-zinc-400">
+              {isAdmin ? "Select a section to get started" : "Your accessible sections"}
+            </p>
+          </div>
+          {isAdmin && (
+            <button
+              onClick={toggleClinicMode}
+              className="flex items-center gap-2.5 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 active:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:active:bg-zinc-800"
+            >
+              <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">Clinic Mode</span>
+              <div className={`relative h-6 w-11 rounded-full transition-colors ${clinicMode ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-600"}`}>
+                <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${clinicMode ? "translate-x-5" : "translate-x-0.5"}`} />
+              </div>
+            </button>
+          )}
         </div>
 
         {loading ? (
@@ -313,7 +336,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {visibleSections.map((section) => (
+            {visibleSections.filter((s) => !clinicMode || !hiddenInClinicMode.includes(s.slug)).map((section) => (
               <button
                 key={section.title}
                 onClick={() => router.push(section.href)}

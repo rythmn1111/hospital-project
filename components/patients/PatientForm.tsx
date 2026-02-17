@@ -25,6 +25,61 @@ export default function PatientForm({ initial, nfcCardId, onSubmit, onCancel, lo
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // OTP verification state — skip for editing existing patients
+  const isEdit = !!initial;
+  const [phoneVerified, setPhoneVerified] = useState(isEdit);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState("");
+
+  async function handleSendOtp() {
+    if (!form.phone.trim() || form.phone.length < 10) {
+      setErrors({ ...errors, phone: "Valid phone number is required" });
+      return;
+    }
+    setOtpLoading(true);
+    setOtpError("");
+    try {
+      const res = await fetch("/api/patient/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: form.phone.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
+      setOtpSent(true);
+    } catch (err: unknown) {
+      setOtpError(err instanceof Error ? err.message : "Failed to send OTP");
+    } finally {
+      setOtpLoading(false);
+    }
+  }
+
+  async function handleVerifyOtp() {
+    if (otpCode.length !== 6) {
+      setOtpError("Enter the 6-digit OTP");
+      return;
+    }
+    setOtpLoading(true);
+    setOtpError("");
+    try {
+      const res = await fetch("/api/patient/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: form.phone.trim(), code: otpCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Verification failed");
+      setPhoneVerified(true);
+      setOtpSent(false);
+    } catch (err: unknown) {
+      setOtpError(err instanceof Error ? err.message : "Verification failed");
+    } finally {
+      setOtpLoading(false);
+    }
+  }
+
   function validate() {
     const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = "Name is required";
@@ -83,11 +138,86 @@ export default function PatientForm({ initial, nfcCardId, onSubmit, onCancel, lo
             <option>Other</option>
           </select>
         </div>
+
+        {/* Phone field with OTP verification */}
         <div>
           <label className={labelClass}>Phone</label>
-          <input className={inputClass} placeholder="9876543210" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          {phoneVerified && !isEdit ? (
+            <div className="flex items-center gap-2">
+              <input className={`${inputClass} bg-zinc-50 dark:bg-zinc-800/50`} value={form.phone} readOnly />
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400" title="Phone verified">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </span>
+            </div>
+          ) : isEdit ? (
+            <input className={inputClass} placeholder="9876543210" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          ) : (
+            <div className="flex items-center gap-2">
+              <input
+                className={inputClass}
+                placeholder="9876543210"
+                value={form.phone}
+                onChange={(e) => {
+                  setForm({ ...form, phone: e.target.value });
+                  if (otpSent) {
+                    setOtpSent(false);
+                    setOtpCode("");
+                    setOtpError("");
+                  }
+                }}
+                disabled={otpLoading}
+              />
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={otpLoading || !form.phone.trim()}
+                className="shrink-0 rounded-xl bg-cyan-600 px-4 py-3 text-sm font-medium text-white active:bg-cyan-700 disabled:opacity-50"
+              >
+                {otpLoading && !otpSent ? "Sending..." : otpSent ? "Resend" : "Verify"}
+              </button>
+            </div>
+          )}
           {errors.phone && <p className={errorClass}>{errors.phone}</p>}
         </div>
+
+        {/* OTP input — shown after OTP is sent */}
+        {otpSent && !phoneVerified && (
+          <div>
+            <label className={labelClass}>Enter OTP</label>
+            <div className="flex items-center gap-2">
+              <input
+                className={inputClass}
+                placeholder="6-digit OTP"
+                value={otpCode}
+                maxLength={6}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setOtpCode(val);
+                  setOtpError("");
+                }}
+                disabled={otpLoading}
+              />
+              <button
+                type="button"
+                onClick={handleVerifyOtp}
+                disabled={otpLoading || otpCode.length !== 6}
+                className="shrink-0 rounded-xl bg-green-600 px-4 py-3 text-sm font-medium text-white active:bg-green-700 disabled:opacity-50"
+              >
+                {otpLoading ? "Verifying..." : "Confirm"}
+              </button>
+            </div>
+            {otpError && <p className={errorClass}>{otpError}</p>}
+          </div>
+        )}
+        {/* Show OTP error even if otpSent is false (e.g. send failure) */}
+        {!otpSent && otpError && !phoneVerified && (
+          <div>
+            <p className={errorClass}>{otpError}</p>
+          </div>
+        )}
+
         <div>
           <label className={labelClass}>Blood Group</label>
           <select className={inputClass} value={form.blood_group} onChange={(e) => setForm({ ...form, blood_group: e.target.value })}>
@@ -109,7 +239,11 @@ export default function PatientForm({ initial, nfcCardId, onSubmit, onCancel, lo
         <button type="button" onClick={onCancel} className="rounded-xl border border-zinc-300 px-6 py-3 text-base font-medium text-zinc-700 active:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:active:bg-zinc-800">
           Cancel
         </button>
-        <button type="submit" disabled={loading} className="rounded-xl bg-cyan-600 px-8 py-3 text-base font-medium text-white active:bg-cyan-700 disabled:opacity-50">
+        <button
+          type="submit"
+          disabled={loading || (!phoneVerified && !isEdit)}
+          className="rounded-xl bg-cyan-600 px-8 py-3 text-base font-medium text-white active:bg-cyan-700 disabled:opacity-50"
+        >
           {loading ? "Saving..." : initial ? "Update Patient" : "Register Patient"}
         </button>
       </div>
